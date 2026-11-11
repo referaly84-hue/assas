@@ -647,6 +647,43 @@ img,svg,video{max-width:100%}
 /* ── Экран ожидания эфира (Standby) ── */
 .draw-standby-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:40px 24px;text-align:center;max-width:700px;margin:24px auto;box-shadow:0 10px 35px rgba(0,0,0,0.05)}
 .draw-standby-radar{width:70px;height:70px;border-radius:50%;background:rgba(27,92,63,0.12);border:2px solid #1b5c3f;display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px;animation:drawPulse 1.8s infinite}
+
+/* ── Статистика команды и игроков ── */
+.ts-hero-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 20px;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(240,248,245,0.95));border:1px solid var(--line);border-radius:14px;margin-bottom:16px}
+.ts-hero-title{display:flex;align-items:center;gap:14px}
+.ts-hero-logo{width:52px;height:52px;object-fit:contain}
+.ts-period-group{display:inline-flex;background:var(--soft);border:1px solid var(--line);padding:3px;border-radius:10px;gap:3px}
+.ts-period-btn{padding:7px 15px;font-size:13px;font-weight:700;border:none;background:transparent;border-radius:8px;cursor:pointer;color:var(--muted);transition:all .15s}
+.ts-period-btn.on{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(27,92,63,0.3)}
+.ts-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:16px}
+.ts-kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02)}
+.ts-kpi-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ts-kpi-icon{font-size:20px}
+.ts-kpi-label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em}
+.ts-kpi-val{font-family:Unbounded,sans-serif;font-size:24px;font-weight:800;color:var(--ink);line-height:1.15}
+.ts-kpi-sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+.ts-split-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:768px){.ts-split-row{grid-template-columns:1fr}}
+.ts-loc-card{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.ts-loc-title{font-weight:700;font-size:13.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ts-leaders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px}
+.ts-leader-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;border-top:3.5px solid var(--green);box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+.ts-leader-tag{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase}
+.ts-leader-name{font-weight:700;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ts-leader-val{font-family:Unbounded,sans-serif;font-size:20px;font-weight:800;color:var(--ink)}
+.ts-leader-sub{font-size:12px;color:var(--muted)}
+.ts-form-pills{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.ts-form-pill{width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11.5px;color:#fff;cursor:default}
+.ts-form-pill.W{background:#16a34a}
+.ts-form-pill.D{background:#d97706}
+.ts-form-pill.L{background:#dc2626}
+.ts-filter-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.team-clickable{cursor:pointer;transition:all .15s}
+.team-clickable:hover{color:var(--green);text-decoration:underline}
+.ts-modal-box{background:var(--bg);border-radius:16px;max-width:980px;width:100%;max-height:92vh;overflow-y:auto;padding:20px;box-shadow:0 25px 60px rgba(0,0,0,0.35);border:1px solid var(--line)}
+.ts-table th.sortable{cursor:pointer;user-select:none;transition:background .15s}
+.ts-table th.sortable:hover{background:rgba(27,92,63,0.08)}
+.ts-table th.sortable.active{color:var(--green);font-weight:800}
 </style>
 </head>
 <body>
@@ -1543,7 +1580,7 @@ function route() {
   const [, page, a, b] = (location.hash || '#/').split('/');
   const app = $('#app');
   scrollTo(0, 0);
-  const R = { '': pgHome, undefined: pgHome, table: pgTable, fixtures: pgFixtures, match: pgMatch, draw: pgDraw, leaders: pgLeaders, national: pgNational, weather: (app, a, b) => { if (S.me?.role !== 'admin') { location.hash = '#/'; return pgHome(app); } return pgWeather(app, a, b); }, regulations: pgHome, club: pgClub, admin: pgAdmin, login: pgLogin };
+  const R = { '': pgHome, undefined: pgHome, table: pgTable, fixtures: pgFixtures, match: pgMatch, draw: pgDraw, leaders: pgLeaders, national: pgNational, weather: (app, a, b) => { if (S.me?.role !== 'admin') { location.hash = '#/'; return pgHome(app); } return pgWeather(app, a, b); }, regulations: pgHome, club: pgClub, admin: pgAdmin, login: pgLogin, team: pgTeamStats };
   (R[page] || pgHome)(app, a, b).catch(x => {
     app.innerHTML = `<div class="panel warn">${e(x.message)}</div>`;
   });
@@ -1673,7 +1710,7 @@ const tableHtml = (rows, opts = {}) => {
     const badgeHtml = z.label ? `<span class="zone-badge ${z.cls.replace('zone-', '')}">${e(z.label)}</span>` : '';
     return `<tr class="${z.cls}">
     <td class="l">
-      <div class="t-cell">
+      <div class="t-cell team-clickable" data-open-team-stats="${r.id}" title="Посмотреть статистику команды и игроков">
         <span class="pos">${r.pos}</span>
         ${logo ? `<img class="t-logo" src="${logo}" alt="${e(r.name)}" loading="lazy" onerror="this.style.display='none'"/>` : ''}
         <span>${e(r.name)}</span>
@@ -3464,7 +3501,7 @@ async function pgLeaders(app) {
       ${pc.length && sortedPlayers.length ? '<div class="scroll-hint"><span>👉 Прокручивайте таблицу вправо</span></div>' : ''}
       <div class="panel wrap">${pc.length ? (sortedPlayers.length ? `<table><thead><tr><th>#</th><th class="l">Игрок</th><th class="l">Команда</th><th>Матчи</th><th>${metricLabel}</th></tr></thead><tbody>${sortedPlayers.slice(0, 50).map((x, i) => `<tr><td class="pos">${i + 1}</td><td class="l">${e(x.n)}</td><td class="l muted"><div class="t-cell">${x.teamLogo ? `<img class="t-logo" src="${x.teamLogo}" alt=""/>` : ''}<span>${e(x.team)}</span></div></td><td>${x.m}</td><td><b>${LD.metric === 'xg' ? (+x[LD.metric]).toFixed(2) : x[LD.metric]}</b></td></tr>`).join('')}</tbody></table>` : '<div class="empty">Пока нет игроков с показателем больше нуля в сыгранных матчах.</div>') : '<div class="empty">Статистика появится после первых полностью сыгранных матчей (запустите тур в разделе «Расписание»).</div>'}</div>`
     : `${teamsList.length ? '<div class="scroll-hint"><span>👉 Прокручивайте таблицу вправо (18 показателей)</span></div>' : ''}
-      <div class="panel wrap">${teamsList.length ? `<table><thead><tr><th class="l">Команда</th>${TC.map(([k, t]) => `<th class="s" data-s="${k}">${t}${LD.sort === k ? ' ▾' : ''}</th>`).join('')}</tr></thead><tbody>${[...teamsList].map(x => ({ ...x })).sort((a, b) => (b[LD.sort] || 0) - (a[LD.sort] || 0)).map(x => `<tr><td class="l"><div class="t-cell">${x.teamLogo ? `<img class="t-logo" src="${x.teamLogo}" alt=""/>` : ''}<span>${e(x.team)}</span></div></td>${TC.map(([k]) => `<td>${k === 'xg' || k === 'xga' ? (+x[k]).toFixed(2) : (x[k] || 0)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="small muted" style="margin-top:8px">Суд+ — ошибки арбитра в пользу команды, Суд− — против. Пен+ / Пен− — пенальти в пользу / против. ПР — пропущенные мячи.</p>` : '<div class="empty">Статистика команд появится после первых сыгранных матчей.</div>'}</div>`}`;
+      <div class="panel wrap">${teamsList.length ? `<table><thead><tr><th class="l">Команда</th>${TC.map(([k, t]) => `<th class="s" data-s="${k}">${t}${LD.sort === k ? ' ▾' : ''}</th>`).join('')}</tr></thead><tbody>${[...teamsList].map(x => ({ ...x })).sort((a, b) => (b[LD.sort] || 0) - (a[LD.sort] || 0)).map(x => `<tr><td class="l"><div class="t-cell team-clickable" data-open-team-stats="${x.tid}" title="Посмотреть статистику команды и игроков">${x.teamLogo ? `<img class="t-logo" src="${x.teamLogo}" alt=""/>` : ''}<span>${e(x.team)}</span></div></td>${TC.map(([k]) => `<td>${k === 'xg' || k === 'xga' ? (+x[k]).toFixed(2) : (x[k] || 0)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="small muted" style="margin-top:8px">Суд+ — ошибки арбитра в пользу команды, Суд− — против. Пен+ / Пен− — пенальти в пользу / против. ПР — пропущенные мячи.</p>` : '<div class="empty">Статистика команд появится после первых сыгранных матчей.</div>'}</div>`}`;
   } else if (LD.tab === 'round') {
     const rData = await api(`/awards/round?comp=${LD.comp}${LD.round ? '&round=' + encodeURIComponent(LD.round) : ''}`);
     const rounds = rData.availableRounds || [];
@@ -4161,6 +4198,559 @@ function setupEuropeanTransferHandlers(app, refreshFn) {
   }
 }
 
+/* ───────── Статистика команды и игроков (месяц, сезон, всё время) ───────── */
+let TEAM_STATS_STATE = {
+  period: 'season', // 'month' | 'season' | 'all'
+  month: '',
+  season: '',
+  comp: 'all',
+  playerSort: 'g',
+  playerSortDir: 'desc',
+  playerPos: 'all',
+  searchQuery: ''
+};
+
+function formatMonthNameRu(mStr) {
+  if (!mStr || mStr.length < 7) return mStr || '';
+  const [y, m] = mStr.split('-');
+  const months = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  const num = parseInt(m, 10);
+  return `${months[num] || m} ${y}`;
+}
+
+async function renderTeamStatsView(container, teamId, opts = {}) {
+  const isModal = !!opts.isModal;
+  const onClose = opts.onClose;
+
+  container.innerHTML = '<div class="panel" style="text-align:center;padding:36px"><div class="muted">Загрузка статистики команды...</div></div>';
+
+  let data;
+  try {
+    const q = new URLSearchParams({
+      period: TEAM_STATS_STATE.period,
+      month: TEAM_STATS_STATE.month,
+      season: TEAM_STATS_STATE.season,
+      comp: TEAM_STATS_STATE.comp
+    });
+    data = await api(`/team/${encodeURIComponent(teamId)}/stats?${q.toString()}`);
+  } catch (err) {
+    container.innerHTML = `<div class="panel warn">Ошибка загрузки статистики: ${e(err.message)}</div>`;
+    return;
+  }
+
+  const { team, period, activeMonth, activeSeason, activeComp, availableMonths, availableSeasons, availableComps, overview: ov, players, leaders } = data;
+  const tLogo = team.logo || teamLogo(team.id);
+
+  // Filter players
+  let filteredPlayers = (players || []).filter(p => {
+    if (TEAM_STATS_STATE.searchQuery) {
+      const q = TEAM_STATS_STATE.searchQuery.toLowerCase();
+      if (!p.name.toLowerCase().includes(q) && !(p.number && String(p.number).includes(q))) return false;
+    }
+    if (TEAM_STATS_STATE.playerPos !== 'all') {
+      const pos = p.pos;
+      if (TEAM_STATS_STATE.playerPos === 'gk' && pos !== 'ВР') return false;
+      if (TEAM_STATS_STATE.playerPos === 'def' && !['ЦЗ', 'ЛЗ', 'ПЗ'].includes(pos)) return false;
+      if (TEAM_STATS_STATE.playerPos === 'mid' && !['ОП', 'ЦП', 'АП'].includes(pos)) return false;
+      if (TEAM_STATS_STATE.playerPos === 'fwd' && !['ЛВ', 'ПВ', 'ЦФ', 'НАП'].includes(pos)) return false;
+    }
+    return true;
+  });
+
+  // Sort players
+  const sKey = TEAM_STATS_STATE.playerSort || 'g';
+  const sDir = TEAM_STATS_STATE.playerSortDir === 'asc' ? 1 : -1;
+  filteredPlayers.sort((a, b) => {
+    let va = a[sKey] ?? 0;
+    let vb = b[sKey] ?? 0;
+    if (typeof va === 'string') return sDir * va.localeCompare(vb);
+    if (va === vb) return (b.min || 0) - (a.min || 0);
+    return sDir * (va - vb);
+  });
+
+  const periodLabel = period === 'month'
+    ? `За месяц: ${formatMonthNameRu(activeMonth)}`
+    : period === 'season'
+    ? `За сезон: ${activeSeason}`
+    : 'За всё время (вся история)';
+
+  container.innerHTML = `
+    <div class="team-stats-wrapper">
+      <div class="ts-hero-bar">
+        <div class="ts-hero-title">
+          ${tLogo ? `<img class="ts-hero-logo" src="${tLogo}" alt="${e(team.name)}"/>` : ''}
+          <div>
+            <div class="row" style="gap:6px;margin-bottom:3px;align-items:center;flex-wrap:wrap">
+              <span class="tag" style="font-weight:700">${e(compName(team.comp))}</span>
+              ${team.city ? `<span class="tag sm">${e(team.city)}</span>` : ''}
+              ${team.stadium ? `<span class="tag sm">🏟 ${e(team.stadium)}</span>` : ''}
+              <span class="tag sm" style="background:#f0fdf4;color:#166534;font-weight:700">${periodLabel}</span>
+            </div>
+            <h2 style="margin:0;font-size:22px">${e(team.name)} · Статистика</h2>
+            <div class="muted small" style="margin-top:2px">
+              Главный тренер: <b>${e(team.coach?.name || 'Не назначен')}</b>
+              ${team.budget ? ` · Бюджет: <b>€${(team.budget).toLocaleString('ru-RU')}</b>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="ts-period-group">
+            <button class="ts-period-btn ${period === 'month' ? 'on' : ''}" data-ts-set-period="month">📅 Месяц</button>
+            <button class="ts-period-btn ${period === 'season' ? 'on' : ''}" data-ts-set-period="season">🏆 Сезон</button>
+            <button class="ts-period-btn ${period === 'all' ? 'on' : ''}" data-ts-set-period="all">♾️ Всё время</button>
+          </div>
+          ${isModal ? `<button class="btn alt sm" id="ts_close_modal_btn" style="padding:6px 12px;font-size:14px">✕ Закрыть</button>` : ''}
+        </div>
+      </div>
+
+      <!-- Фильтры периода и турнира -->
+      <div class="panel" style="padding:10px 16px;margin-bottom:14px">
+        <div class="row sp" style="gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:700;color:var(--muted)">Параметры выборки:</span>
+
+            ${period === 'month' ? `
+              <div class="row" style="gap:6px;align-items:center">
+                <label class="small muted">Месяц:</label>
+                <select id="ts_month_select" style="padding:4px 8px;font-size:13px;border-radius:6px;background:var(--soft)">
+                  ${availableMonths.map(m => `<option value="${m}" ${m === activeMonth ? 'selected' : ''}>${formatMonthNameRu(m)}</option>`).join('')}
+                </select>
+              </div>
+            ` : ''}
+
+            ${period === 'season' ? `
+              <div class="row" style="gap:6px;align-items:center">
+                <label class="small muted">Сезон:</label>
+                <select id="ts_season_select" style="padding:4px 8px;font-size:13px;border-radius:6px;background:var(--soft)">
+                  ${availableSeasons.map(s => `<option value="${s}" ${s === activeSeason ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </div>
+            ` : ''}
+
+            <div class="row" style="gap:6px;align-items:center">
+              <label class="small muted">Турнир:</label>
+              <select id="ts_comp_select" style="padding:4px 8px;font-size:13px;border-radius:6px;background:var(--soft)">
+                <option value="all" ${activeComp === 'all' ? 'selected' : ''}>Все турниры</option>
+                ${availableComps.map(c => `<option value="${c}" ${c === activeComp ? 'selected' : ''}>${e(compName(c))}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="small muted">
+            Всего сыграно за период: <b>${ov.matches}</b> матчей
+          </div>
+        </div>
+      </div>
+
+      <!-- Сводка команды (KPI Cards) -->
+      ${ov.matches === 0 ? `
+        <div class="panel" style="text-align:center;padding:32px 20px;margin-bottom:16px;background:#f8fafc;border:1px dashed var(--line)">
+          <div style="font-size:32px;margin-bottom:8px">📊</div>
+          <h3 style="margin:0 0 6px">Матчи в данном периоде ещё не завершены</h3>
+          <p class="muted small" style="max-width:560px;margin:0 auto 14px;line-height:1.5">
+            За период <b>${periodLabel}</b> у команды «${e(team.name)}» пока нет сыгранных матчей. Как только матчи будут запущены и завершены, здесь сразу появится полная статистика команды, лидеров и игроков.
+          </p>
+          <div class="muted small">Ниже представлен текущий состав команды.</div>
+        </div>
+      ` : `
+        <div class="ts-kpi-grid">
+          <!-- Карточка 1: Результаты и очки -->
+          <div class="ts-kpi-card" style="border-top:4px solid #16a34a">
+            <div class="ts-kpi-head">
+              <span class="ts-kpi-label">Матчи и результат</span>
+              <span class="ts-kpi-icon">🏆</span>
+            </div>
+            <div>
+              <div class="ts-kpi-val" style="color:#15803d">
+                ${ov.wins}В <span style="color:#b45309">${ov.draws}Н</span> <span style="color:#b91c1c">${ov.losses}П</span>
+              </div>
+              <div class="ts-kpi-sub">
+                Сыграно матчей: <b>${ov.matches}</b> · Очки: <b>${ov.points}</b> (<b>${ov.matches ? (ov.points/ov.matches).toFixed(2) : '0.00'}</b> PPG)
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)">
+              <div class="row sp" style="font-size:12px;margin-bottom:4px">
+                <span class="muted">Процент побед:</span>
+                <b>${ov.winRate}%</b>
+              </div>
+              <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden">
+                <div style="width:${ov.winRate}%;height:100%;background:${ov.winRate >= 50 ? '#16a34a' : ov.winRate >= 30 ? '#d97706' : '#dc2626'}"></div>
+              </div>
+              ${(ov.recentForm || []).length ? `
+                <div class="row sp" style="margin-top:10px;align-items:center">
+                  <span class="muted small">Форма:</span>
+                  <div class="ts-form-pills">
+                    ${ov.recentForm.map(f => `<span class="ts-form-pill ${f.result}" title="${f.isHome ? 'Дома' : 'В гостях'} против ${e(f.opponentName)} (${f.score}), xG ${f.xg}:${f.xga}">${f.result}</span>`).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Карточка 2: Атака и голы -->
+          <div class="ts-kpi-card" style="border-top:4px solid #0284c7">
+            <div class="ts-kpi-head">
+              <span class="ts-kpi-label">Атака и голы</span>
+              <span class="ts-kpi-icon">⚽</span>
+            </div>
+            <div>
+              <div class="ts-kpi-val" style="color:#0369a1">
+                ${ov.goalsFor} <span style="font-size:16px;font-weight:600;color:var(--muted)">голов</span>
+              </div>
+              <div class="ts-kpi-sub">
+                В среднем: <b>${ov.avgGoalsFor}</b> гола за матч
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;display:flex;flex-direction:column;gap:4px">
+              <div class="row sp">
+                <span class="muted">Ожидаемые голы (xG):</span>
+                <b>${ov.xg.toFixed(2)}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Разница xG (xG Diff):</span>
+                <b style="color:${ov.xgDiff >= 0 ? '#16a34a' : '#dc2626'}">${ov.xgDiff > 0 ? '+' : ''}${ov.xgDiff.toFixed(2)}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Удары (всего / в створ):</span>
+                <b>${ov.shots} / ${ov.shotsOnTarget} (${ov.shotAccuracy}%)</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Угловые / Пенальти:</span>
+                <b>${ov.corners} / ${ov.penaltiesScored}</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 3: Оборона и надежность -->
+          <div class="ts-kpi-card" style="border-top:4px solid #ea580c">
+            <div class="ts-kpi-head">
+              <span class="ts-kpi-label">Оборона и надежность</span>
+              <span class="ts-kpi-icon">🛡️</span>
+            </div>
+            <div>
+              <div class="ts-kpi-val" style="color:#c2410c">
+                ${ov.goalsAgainst} <span style="font-size:16px;font-weight:600;color:var(--muted)">пропущено</span>
+              </div>
+              <div class="ts-kpi-sub">
+                В среднем: <b>${ov.avgGoalsAgainst}</b> за матч · Разница: <b>${ov.goalDiff > 0 ? '+' : ''}${ov.goalDiff}</b>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;display:flex;flex-direction:column;gap:4px">
+              <div class="row sp">
+                <span class="muted">Допущенный xGA:</span>
+                <b>${ov.xga.toFixed(2)}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">«Сухие» матчи:</span>
+                <b>${ov.cleanSheets} (${ov.matches ? Math.round(ov.cleanSheets / ov.matches * 100) : 0}%)</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Сейвы вратарей:</span>
+                <b>${ov.saves}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Успешные отборы:</span>
+                <b>${ov.tackles}</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 4: Дисциплина и владение -->
+          <div class="ts-kpi-card" style="border-top:4px solid #7c3aed">
+            <div class="ts-kpi-head">
+              <span class="ts-kpi-label">Дисциплина и владение</span>
+              <span class="ts-kpi-icon">⚖️</span>
+            </div>
+            <div>
+              <div class="ts-kpi-val" style="color:#6d28d9">
+                ${ov.avgPoss}% <span style="font-size:15px;font-weight:600;color:var(--muted)">владение</span>
+              </div>
+              <div class="ts-kpi-sub">
+                Карточки: <b style="color:#d97706">${ov.yellowCards} ЖК</b> · <b style="color:#dc2626">${ov.redCards} КК</b>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;display:flex;flex-direction:column;gap:4px">
+              <div class="row sp">
+                <span class="muted">Фолы (совершено / на команде):</span>
+                <b>${ov.fouls} / ${ov.foulsDrawn}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Судейские решения (Суд+ / Суд−):</span>
+                <b>${ov.refDecisionsFavor} / ${ov.refDecisionsAgainst}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Пенальти против команды:</span>
+                <b>${ov.penaltiesAgainst}</b>
+              </div>
+              <div class="row sp">
+                <span class="muted">Матчи без забитых мячей:</span>
+                <b>${ov.failedToScore}</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Дома vs В гостях -->
+        <div class="ts-split-row">
+          <div class="ts-loc-card">
+            <div class="ts-loc-title">
+              <span>🏠 На своем поле (Дома)</span>
+              <span class="tag sm" style="margin-left:auto">${ov.home.m} матчей</span>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)">
+              <span>Результаты:</span>
+              <b>${ov.home.w}В · ${ov.home.d}Н · ${ov.home.l}П (${ov.home.pts} очков)</b>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)">
+              <span>Мячи (Забито : Пропущено):</span>
+              <b>${ov.home.gf} : ${ov.home.ga} (Разница: ${ov.home.gf - ov.home.ga > 0 ? '+' : ''}${ov.home.gf - ov.home.ga})</b>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0">
+              <span>Ожидаемые голы (xG : xGA):</span>
+              <b>${ov.home.xg.toFixed(2)} : ${ov.home.xga.toFixed(2)}</b>
+            </div>
+          </div>
+
+          <div class="ts-loc-card">
+            <div class="ts-loc-title">
+              <span>✈️ На выезде (В гостях)</span>
+              <span class="tag sm" style="margin-left:auto">${ov.away.m} матчей</span>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)">
+              <span>Результаты:</span>
+              <b>${ov.away.w}В · ${ov.away.d}Н · ${ov.away.l}П (${ov.away.pts} очков)</b>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)">
+              <span>Мячи (Забито : Пропущено):</span>
+              <b>${ov.away.gf} : ${ov.away.ga} (Разница: ${ov.away.gf - ov.away.ga > 0 ? '+' : ''}${ov.away.gf - ov.away.ga})</b>
+            </div>
+            <div class="row sp" style="font-size:13px;padding:6px 0">
+              <span>Ожидаемые голы (xG : xGA):</span>
+              <b>${ov.away.xg.toFixed(2)} : ${ov.away.xga.toFixed(2)}</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- Лидеры команды -->
+        <div class="panel" style="margin-bottom:16px">
+          <h3 style="margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:6px">
+            <span>⭐</span>
+            <span>Лидеры команды в выбранном периоде</span>
+          </h3>
+          <div class="ts-leaders-grid">
+            <div class="ts-leader-card">
+              <span class="ts-leader-tag">🥇 Лучший бомбардир</span>
+              <div class="ts-leader-name">${leaders.topScorer ? e(leaders.topScorer.name) : '—'}</div>
+              <div class="ts-leader-val" style="color:#16a34a">${leaders.topScorer ? leaders.topScorer.g : 0} <span style="font-size:13px;font-weight:600;color:var(--muted)">голов</span></div>
+              <div class="ts-leader-sub">${leaders.topScorer ? `${leaders.topScorer.pos} · xG ${leaders.topScorer.xg}` : 'Нет голов'}</div>
+            </div>
+
+            <div class="ts-leader-card" style="border-top-color:#0284c7">
+              <span class="ts-leader-tag" style="color:#0284c7">🎯 Лучший ассистент</span>
+              <div class="ts-leader-name">${leaders.topAssister ? e(leaders.topAssister.name) : '—'}</div>
+              <div class="ts-leader-val" style="color:#0284c7">${leaders.topAssister ? leaders.topAssister.a : 0} <span style="font-size:13px;font-weight:600;color:var(--muted)">пас.</span></div>
+              <div class="ts-leader-sub">${leaders.topAssister ? `${leaders.topAssister.pos} · ${leaders.topAssister.m} матчей` : 'Нет передач'}</div>
+            </div>
+
+            <div class="ts-leader-card" style="border-top-color:#7c3aed">
+              <span class="ts-leader-tag" style="color:#7c3aed">🌟 Гол + Пас</span>
+              <div class="ts-leader-name">${leaders.topGA ? e(leaders.topGA.name) : '—'}</div>
+              <div class="ts-leader-val" style="color:#7c3aed">${leaders.topGA ? leaders.topGA.ga : 0} <span style="font-size:13px;font-weight:600;color:var(--muted)">очков</span></div>
+              <div class="ts-leader-sub">${leaders.topGA ? `${leaders.topGA.g} голов + ${leaders.topGA.a} пасов` : 'Нет очков'}</div>
+            </div>
+
+            <div class="ts-leader-card" style="border-top-color:#d97706">
+              <span class="ts-leader-tag" style="color:#d97706">⏱️ Лидер по минутам</span>
+              <div class="ts-leader-name">${leaders.topMinutes ? e(leaders.topMinutes.name) : '—'}</div>
+              <div class="ts-leader-val" style="color:#d97706">${leaders.topMinutes ? leaders.topMinutes.min : 0} <span style="font-size:13px;font-weight:600;color:var(--muted)">мин</span></div>
+              <div class="ts-leader-sub">${leaders.topMinutes ? `${leaders.topMinutes.m} матчей (${leaders.topMinutes.starts} в старте)` : '—'}</div>
+            </div>
+
+            <div class="ts-leader-card" style="border-top-color:#059669">
+              <span class="ts-leader-tag" style="color:#059669">🧤 Вратарь</span>
+              <div class="ts-leader-name">${leaders.bestGk ? e(leaders.bestGk.name) : '—'}</div>
+              <div class="ts-leader-val" style="color:#059669">${leaders.bestGk ? leaders.bestGk.sv : 0} <span style="font-size:13px;font-weight:600;color:var(--muted)">сейвов</span></div>
+              <div class="ts-leader-sub">${leaders.bestGk ? `Сухих матчей: ${leaders.bestGk.cs}` : '—'}</div>
+            </div>
+          </div>
+        </div>
+      `}
+
+      <!-- Подробная таблица статистики игроков -->
+      <div class="panel">
+        <div class="row sp" style="margin-bottom:12px;flex-wrap:wrap;gap:10px;align-items:center">
+          <div>
+            <h3 style="margin:0;font-size:16px">Статистика игроков команды (${filteredPlayers.length})</h3>
+            <span class="muted small">Нажимайте на заголовки столбцов для быстрой сортировки</span>
+          </div>
+
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="ts_p_search" placeholder="Поиск по имени..." value="${e(TEAM_STATS_STATE.searchQuery)}" style="padding:5px 10px;font-size:13px;border-radius:6px;width:160px;border:1px solid var(--line)"/>
+            <div class="row" style="gap:4px">
+              ${[
+                ['all', 'Все'],
+                ['gk', 'ВР'],
+                ['def', 'Защита'],
+                ['mid', 'Полузащита'],
+                ['fwd', 'Атака']
+              ].map(([k, t]) => `<button class="btn sm ${TEAM_STATS_STATE.playerPos === k ? '' : 'alt'}" data-ts-pos="${k}">${t}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-hint"><span>👉 Прокручивайте таблицу вправо (17 показателей)</span></div>
+
+        <div class="wrap" style="overflow-x:auto">
+          <table class="ts-table" style="width:100%;font-size:13.5px">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th class="l sortable ${sKey === 'name' ? 'active' : ''}" data-ts-sort="name">Игрок ${sKey === 'name' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th style="width:50px">Поз</th>
+                <th class="sortable ${sKey === 'm' ? 'active' : ''}" data-ts-sort="m" title="Сыграно матчей">И ${sKey === 'm' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th title="В стартовом составе / Выход на замену">Старт/Зам</th>
+                <th class="sortable ${sKey === 'min' ? 'active' : ''}" data-ts-sort="min" title="Сыграно минут">Мин ${sKey === 'min' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'g' ? 'active' : ''}" data-ts-sort="g" title="Забито голов" style="color:#16a34a">Г ${sKey === 'g' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'a' ? 'active' : ''}" data-ts-sort="a" title="Голевые передачи" style="color:#0284c7">А ${sKey === 'a' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'ga' ? 'active' : ''}" data-ts-sort="ga" title="Гол + Пас" style="color:#7c3aed;font-weight:800">Г+П ${sKey === 'ga' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'xg' ? 'active' : ''}" data-ts-sort="xg" title="Ожидаемые голы (xG)">xG ${sKey === 'xg' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'sh' ? 'active' : ''}" data-ts-sort="sh" title="Удары всего (в створ)">Уд (Ств)</th>
+                <th class="sortable ${sKey === 'tk' ? 'active' : ''}" data-ts-sort="tk" title="Успешные отборы">Отб ${sKey === 'tk' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'sv' ? 'active' : ''}" data-ts-sort="sv" title="Вратарские сейвы">Сейвы ${sKey === 'sv' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'cs' ? 'active' : ''}" data-ts-sort="cs" title="Сухие матчи">СМ ${sKey === 'cs' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th title="Фолы (совершил / на нём)">Фолы</th>
+                <th class="sortable ${sKey === 'yc' ? 'active' : ''}" data-ts-sort="yc" title="Жёлтые карточки" style="color:#d97706">ЖК ${sKey === 'yc' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+                <th class="sortable ${sKey === 'rc' ? 'active' : ''}" data-ts-sort="rc" title="Красные карточки" style="color:#dc2626">КК ${sKey === 'rc' ? (sDir > 0 ? '▲' : '▼') : ''}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredPlayers.length ? filteredPlayers.map((p, idx) => `
+                <tr style="${p.m > 0 ? '' : 'opacity:0.65'}">
+                  <td class="pos">${idx + 1}</td>
+                  <td class="l">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      ${p.number ? `<span class="muted small" style="min-width:18px;font-weight:700">#${p.number}</span>` : ''}
+                      <b style="color:var(--ink)">${e(p.name)}</b>
+                      ${!p.inSquad ? `<span class="tag sm" style="background:#fee2e2;color:#991b1b;font-size:10px">ушел из клуба</span>` : ''}
+                    </div>
+                  </td>
+                  <td><span class="tag sm">${e(p.pos)}</span></td>
+                  <td><b>${p.m}</b></td>
+                  <td class="muted small">${p.starts}/${p.subIns}</td>
+                  <td><b>${p.min}</b></td>
+                  <td style="font-weight:700;color:#16a34a">${p.g}</td>
+                  <td style="font-weight:700;color:#0284c7">${p.a}</td>
+                  <td style="font-weight:800;color:#7c3aed;background:rgba(124,58,237,0.06)">${p.ga}</td>
+                  <td>${p.xg ? (+p.xg).toFixed(2) : '0.00'}</td>
+                  <td>${p.sh} <span class="muted small">(${p.sot})</span></td>
+                  <td>${p.tk}</td>
+                  <td>${p.pos === 'ВР' ? `<b>${p.sv}</b>` : (p.sv || '—')}</td>
+                  <td>${p.pos === 'ВР' || ['ЦЗ','ЛЗ','ПЗ'].includes(p.pos) ? p.cs : '—'}</td>
+                  <td class="muted small">${p.fo}/${p.fa}</td>
+                  <td style="color:#d97706;font-weight:600">${p.yc}</td>
+                  <td style="color:#dc2626;font-weight:700">${p.rc}</td>
+                </tr>
+              `).join('') : `
+                <tr><td colspan="17" class="empty">Игроки по заданным критериям не найдены.</td></tr>
+              `}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Attach handlers
+  container.querySelectorAll('[data-ts-set-period]').forEach(btn => {
+    btn.onclick = () => {
+      TEAM_STATS_STATE.period = btn.dataset.tsSetPeriod;
+      renderTeamStatsView(container, teamId, opts);
+    };
+  });
+
+  const monthSel = container.querySelector('#ts_month_select');
+  if (monthSel) {
+    monthSel.onchange = (e) => {
+      TEAM_STATS_STATE.month = e.target.value;
+      renderTeamStatsView(container, teamId, opts);
+    };
+  }
+
+  const seasonSel = container.querySelector('#ts_season_select');
+  if (seasonSel) {
+    seasonSel.onchange = (e) => {
+      TEAM_STATS_STATE.season = e.target.value;
+      renderTeamStatsView(container, teamId, opts);
+    };
+  }
+
+  const compSel = container.querySelector('#ts_comp_select');
+  if (compSel) {
+    compSel.onchange = (e) => {
+      TEAM_STATS_STATE.comp = e.target.value;
+      renderTeamStatsView(container, teamId, opts);
+    };
+  }
+
+  container.querySelectorAll('[data-ts-pos]').forEach(btn => {
+    btn.onclick = () => {
+      TEAM_STATS_STATE.playerPos = btn.dataset.tsPos;
+      renderTeamStatsView(container, teamId, opts);
+    };
+  });
+
+  const searchInp = container.querySelector('#ts_p_search');
+  if (searchInp) {
+    searchInp.oninput = (e) => {
+      TEAM_STATS_STATE.searchQuery = e.target.value.trim();
+      renderTeamStatsView(container, teamId, opts);
+    };
+  }
+
+  container.querySelectorAll('[data-ts-sort]').forEach(th => {
+    th.onclick = () => {
+      const col = th.dataset.tsSort;
+      if (TEAM_STATS_STATE.playerSort === col) {
+        TEAM_STATS_STATE.playerSortDir = TEAM_STATS_STATE.playerSortDir === 'desc' ? 'asc' : 'desc';
+      } else {
+        TEAM_STATS_STATE.playerSort = col;
+        TEAM_STATS_STATE.playerSortDir = 'desc';
+      }
+      renderTeamStatsView(container, teamId, opts);
+    };
+  });
+
+  const closeBtn = container.querySelector('#ts_close_modal_btn');
+  if (closeBtn && onClose) {
+    closeBtn.onclick = onClose;
+  }
+}
+
+function showTeamStatsModal(teamId) {
+  const m = modal(`
+    <div class="ts-modal-box" id="team_stats_modal_inner"></div>
+  `);
+  const inner = m.querySelector('#team_stats_modal_inner');
+  renderTeamStatsView(inner, teamId, {
+    isModal: true,
+    onClose: () => m.remove()
+  });
+}
+
+async function pgTeamStats(app, teamId) {
+  if (!teamId) {
+    const defaultTeam = (S.st?.teams || []).find(t => t.comp === 'rpl') || (S.st?.teams || [])[0];
+    teamId = defaultTeam?.id || '';
+  }
+  if (!teamId) {
+    app.innerHTML = '<div class="panel warn">Команда не выбрана</div>';
+    return;
+  }
+  app.innerHTML = '<div id="ts_page_root"></div>';
+  renderTeamStatsView($('#ts_page_root'), teamId, { isModal: false });
+}
+
 /* ───── клуб ───── */
 let CT = 'matches', CLUB_TID = '';
 async function pgClub(app) {
@@ -4254,6 +4844,7 @@ async function pgClub(app) {
 
   <div class="tabs">
     <button data-t="matches" class="${CT === 'matches' ? 'on' : ''}">Матчи и тактика</button>
+    <button data-t="stats" class="${CT === 'stats' ? 'on' : ''}">📊 Статистика</button>
     <button data-t="squad" class="${CT === 'squad' ? 'on' : ''}">Заявка (${c.squad.length}/${c.squadMax})</button>
     <button data-t="staff" class="${CT === 'staff' ? 'on' : ''}" style="${(c.staffSlots || []).some(x => x.required && !x.member) ? 'background:#fee2e2;color:#991b1b;font-weight:700' : ''}">🧑‍🏫 Штаб ${(c.staffSlots || []).filter(x => x.required && !x.member).length ? `(не хватает: ${(c.staffSlots || []).filter(x => x.required && !x.member).length})` : ''}</button>
     <button data-t="staffmarket" class="${CT === 'staffmarket' ? 'on' : ''}" style="${(c.staffOffers?.incoming?.length) ? 'background:#dcfce7;color:#166534;font-weight:700' : ''}">🔄 Рынок штаба ${(c.staffOffers?.incoming?.length || c.staffOffers?.outgoing?.length) ? `(${(c.staffOffers.incoming?.length || 0) + (c.staffOffers.outgoing?.length || 0)})` : ''}</button>
@@ -5208,6 +5799,11 @@ async function pgClub(app) {
       if (r) pgClub(app);
     });
 
+    return;
+  }
+
+  if (CT === 'stats') {
+    renderTeamStatsView(cb, c.team.id);
     return;
   }
 
@@ -10041,6 +10637,15 @@ async function applyDrawResults(app) {
     toast('Ошибка сохранения: ' + err.message);
   }
 }
+
+document.body.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-open-team-stats]');
+  if (el) {
+    ev.preventDefault();
+    const tid = el.dataset.openTeamStats;
+    if (tid) showTeamStatsModal(tid);
+  }
+});
 
 boot();
 </script>

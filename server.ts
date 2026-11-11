@@ -6335,6 +6335,316 @@ app.get('/api/derbies', (req, res) => {
   })));
 });
 
+/* ───────── Статистика команды и игроков (месяц, сезон, всё время) ───────── */
+function getTeamStats(teamId: string, query: any) {
+  const t = team(teamId);
+  if (!t) return null;
+
+  const period = String(query.period || 'season').toLowerCase(); // 'month' | 'season' | 'all'
+  const targetComp = String(query.comp || 'all').toLowerCase();
+
+  // Все завершённые матчи команды за всю историю
+  const allTeamDoneFx = (db.fixtures || []).filter((f: any) =>
+    f.status === 'done' && (f.home === teamId || f.away === teamId)
+  );
+
+  // Доступные месяцы
+  const availableMonths = [...new Set<string>(
+    allTeamDoneFx.map((f: any) => String(f.date || '').slice(0, 7)).filter(Boolean)
+  )].sort();
+
+  if (!availableMonths.length) {
+    const scheduledMonths = [...new Set<string>(
+      (db.fixtures || []).filter((f: any) => (f.home === teamId || f.away === teamId) && f.date)
+        .map((f: any) => String(f.date || '').slice(0, 7)).filter(Boolean)
+    )].sort();
+    availableMonths.push(...scheduledMonths);
+  }
+
+  const availableSeasons = [...new Set<string>(
+    (db.fixtures || []).filter((f: any) => f.home === teamId || f.away === teamId)
+      .map((f: any) => f.season || S()).filter(Boolean)
+  )].sort();
+  if (!availableSeasons.includes(S())) availableSeasons.push(S());
+
+  const availableComps = [...new Set<string>(
+    (db.fixtures || []).filter((f: any) => f.home === teamId || f.away === teamId)
+      .map((f: any) => f.comp).filter(Boolean)
+  )];
+
+  // Активный месяц
+  let activeMonth = String(query.month || '').trim();
+  if (!activeMonth || !availableMonths.includes(activeMonth)) {
+    activeMonth = availableMonths[availableMonths.length - 1] || new Date().toISOString().slice(0, 7);
+  }
+
+  // Активный сезон
+  let activeSeason = String(query.season || '').trim();
+  if (!activeSeason || !availableSeasons.includes(activeSeason)) {
+    activeSeason = S();
+  }
+
+  // Фильтрация матчей
+  let filteredFx = allTeamDoneFx;
+
+  if (targetComp !== 'all') {
+    filteredFx = filteredFx.filter((f: any) => f.comp === targetComp);
+  }
+
+  if (period === 'month') {
+    filteredFx = filteredFx.filter((f: any) => String(f.date || '').startsWith(activeMonth));
+  } else if (period === 'season') {
+    filteredFx = filteredFx.filter((f: any) => (f.season || S()) === activeSeason);
+  }
+
+  // Сортировка по хронологии
+  filteredFx.sort((a: any, b: any) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+
+  // Показатели команды
+  let matches = 0, wins = 0, draws = 0, losses = 0;
+  let goalsFor = 0, goalsAgainst = 0;
+  let xg = 0, xga = 0;
+  let shots = 0, sot = 0, shotsAgainst = 0, sotAgainst = 0;
+  let corners = 0, cornersAgainst = 0;
+  let fouls = 0, foulsDrawn = 0;
+  let yc = 0, rc = 0;
+  let tackles = 0, saves = 0, cleanSheets = 0;
+  let penF = 0, penA = 0, refF = 0, refA = 0;
+  let possSum = 0, possCount = 0;
+
+  const home = { m: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, xg: 0, xga: 0, pts: 0 };
+  const away = { m: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, xg: 0, xga: 0, pts: 0 };
+  const formList: any[] = [];
+
+  for (const f of filteredFx) {
+    const isHome = f.home === teamId;
+    const side = isHome ? 'home' : 'away';
+    const oppSide = isHome ? 'away' : 'home';
+    const oppId = isHome ? f.away : f.home;
+    const stT = f.st?.teams || {};
+    const myStats = stT[side] || {};
+    const oppStats = stT[oppSide] || {};
+
+    const gf = typeof f.homeScore === 'number' ? (isHome ? f.homeScore : f.awayScore) : (myStats.g || 0);
+    const ga = typeof f.awayScore === 'number' ? (isHome ? f.awayScore : f.homeScore) : (oppStats.g || 0);
+    const mXg = +(myStats.xg || 0);
+    const mXga = +(oppStats.xg || 0);
+
+    matches++;
+    goalsFor += gf;
+    goalsAgainst += ga;
+    xg += mXg;
+    xga += mXga;
+    shots += (myStats.sh || 0);
+    sot += (myStats.sot || 0);
+    shotsAgainst += (oppStats.sh || 0);
+    sotAgainst += (oppStats.sot || 0);
+    corners += (myStats.co || 0);
+    cornersAgainst += (oppStats.co || 0);
+    fouls += (myStats.fo || 0);
+    foulsDrawn += (oppStats.fo || 0);
+    yc += (myStats.yc || 0);
+    rc += (myStats.rc || 0);
+    tackles += (myStats.tk || 0);
+    saves += (myStats.sv || 0);
+    penF += (myStats.penF || 0);
+    penA += (myStats.penA || 0);
+    refF += (myStats.refF || 0);
+    refA += (myStats.refA || 0);
+
+    if (f.st?.poss && Array.isArray(f.st.poss)) {
+      const myPoss = isHome ? f.st.poss[0] : f.st.poss[1];
+      if (typeof myPoss === 'number') { possSum += myPoss; possCount++; }
+    }
+
+    let result = 'D';
+    if (gf > ga) { wins++; result = 'W'; }
+    else if (gf < ga) { losses++; result = 'L'; }
+    else { draws++; }
+    if (ga === 0) cleanSheets++;
+
+    const loc = isHome ? home : away;
+    loc.m++; loc.gf += gf; loc.ga += ga;
+    loc.xg = +(loc.xg + mXg).toFixed(2);
+    loc.xga = +(loc.xga + mXga).toFixed(2);
+    if (gf > ga) { loc.w++; loc.pts += 3; }
+    else if (gf === ga) { loc.d++; loc.pts += 1; }
+    else { loc.l++; }
+
+    formList.push({
+      id: f.id,
+      date: f.date,
+      time: f.time,
+      comp: f.comp,
+      round: f.round,
+      isHome,
+      opponentId: oppId,
+      opponentName: tn(oppId),
+      opponentLogo: teamLogo(oppId),
+      score: `${gf}:${ga}`,
+      gf, ga,
+      result,
+      xg: mXg.toFixed(2),
+      xga: mXga.toFixed(2)
+    });
+  }
+
+  const points = wins * 3 + draws;
+  const winRate = matches > 0 ? Math.round((wins / matches) * 100) : 0;
+  const avgPoss = possCount > 0 ? Math.round(possSum / possCount) : 50;
+  const shotAccuracy = shots > 0 ? Math.round((sot / shots) * 100) : 0;
+  const avgGoalsFor = matches > 0 ? +(goalsFor / matches).toFixed(2) : 0;
+  const avgGoalsAgainst = matches > 0 ? +(goalsAgainst / matches).toFixed(2) : 0;
+
+  // Игроки команды
+  const playersMap = new Map<string, any>();
+  const curSquad = squadOf(teamId);
+  for (const p of curSquad) {
+    playersMap.set(p.id, {
+      pid: p.id,
+      name: p.name,
+      pos: p.pos || 'ЦП',
+      number: p.number || p.num || null,
+      nation: p.nation || 'Россия',
+      photo: p.photo || p.portrait || null,
+      inSquad: true,
+      m: 0, starts: 0, subIns: 0, min: 0, g: 0, a: 0, ga: 0,
+      xg: 0, sh: 0, sot: 0, tk: 0, sv: 0, cs: 0, fo: 0, fa: 0, yc: 0, rc: 0
+    });
+  }
+
+  for (const f of filteredFx) {
+    if (!f.st?.players) continue;
+    const isHome = f.home === teamId;
+    const side = isHome ? 'home' : 'away';
+
+    for (const [pid, s] of Object.entries<any>(f.st.players)) {
+      if (s.t !== teamId) continue;
+      let pl = playersMap.get(pid);
+      if (!pl) {
+        const dbP = player(pid);
+        pl = {
+          pid,
+          name: s.n || dbP?.name || 'Игрок',
+          pos: dbP?.pos || s.pos || 'ЦП',
+          number: dbP?.number || dbP?.num || null,
+          nation: dbP?.nation || 'Россия',
+          photo: dbP?.photo || dbP?.portrait || null,
+          inSquad: false,
+          m: 0, starts: 0, subIns: 0, min: 0, g: 0, a: 0, ga: 0,
+          xg: 0, sh: 0, sot: 0, tk: 0, sv: 0, cs: 0, fo: 0, fa: 0, yc: 0, rc: 0
+        };
+        playersMap.set(pid, pl);
+      }
+      pl.m += 1;
+      pl.min += (s.min || 0);
+      pl.g += (s.g || 0);
+      pl.a += (s.a || 0);
+      pl.ga += ((s.g || 0) + (s.a || 0));
+      pl.xg = +(pl.xg + (s.xg || 0)).toFixed(2);
+      pl.sh += (s.sh || 0);
+      pl.sot += (s.sot || 0);
+      pl.tk += (s.tk || 0);
+      pl.sv += (s.sv || 0);
+      pl.cs += (s.cs || 0);
+      pl.fo += (s.ff || s.fo || 0);
+      pl.fa += (s.fa || 0);
+      pl.yc += (s.yc || 0);
+      pl.rc += (s.rc || 0);
+
+      if (f.lineups?.[side]?.starters?.includes(pid)) {
+        pl.starts += 1;
+      } else if (s.min > 0) {
+        pl.subIns += 1;
+      }
+    }
+  }
+
+  const playersList = Array.from(playersMap.values()).sort((a, b) => b.g - a.g || b.ga - a.ga || b.min - a.min);
+
+  // Лидеры команды
+  const topScorer = playersList.filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.min - a.min)[0] || null;
+  const topAssister = playersList.filter(p => p.a > 0).sort((a, b) => b.a - a.a || b.min - a.min)[0] || null;
+  const topGA = playersList.filter(p => p.ga > 0).sort((a, b) => b.ga - a.ga || b.min - a.min)[0] || null;
+  const topMinutes = playersList.filter(p => p.min > 0).sort((a, b) => b.min - a.min)[0] || null;
+  const bestGk = playersList.filter(p => p.pos === 'ВР' && (p.sv > 0 || p.cs > 0 || p.m > 0)).sort((a, b) => (b.cs * 5 + b.sv) - (a.cs * 5 + a.sv))[0] || null;
+
+  return {
+    team: pubTeam(t),
+    period,
+    activeMonth,
+    activeSeason,
+    activeComp: targetComp,
+    availableMonths,
+    availableSeasons,
+    availableComps,
+    overview: {
+      matches,
+      wins,
+      draws,
+      losses,
+      points,
+      winRate,
+      goalsFor,
+      goalsAgainst,
+      goalDiff: goalsFor - goalsAgainst,
+      avgGoalsFor,
+      avgGoalsAgainst,
+      cleanSheets,
+      failedToScore: filteredFx.filter((f: any) => {
+        const isH = f.home === teamId;
+        const gf = typeof f.homeScore === 'number' ? (isH ? f.homeScore : f.awayScore) : (f.st?.teams?.[isH ? 'home' : 'away']?.g || 0);
+        return gf === 0;
+      }).length,
+      xg: +xg.toFixed(2),
+      xga: +xga.toFixed(2),
+      xgDiff: +(xg - xga).toFixed(2),
+      shots,
+      shotsOnTarget: sot,
+      shotsAgainst,
+      shotsOnTargetAgainst: sotAgainst,
+      shotAccuracy,
+      avgPoss,
+      corners,
+      cornersAgainst,
+      fouls,
+      foulsDrawn,
+      yellowCards: yc,
+      redCards: rc,
+      tackles,
+      saves,
+      penaltiesScored: penF,
+      penaltiesAgainst: penA,
+      refDecisionsFavor: refF,
+      refDecisionsAgainst: refA,
+      home,
+      away,
+      recentForm: formList.slice(-6).reverse(),
+      allMatchesCount: allTeamDoneFx.length
+    },
+    players: playersList,
+    leaders: {
+      topScorer,
+      topAssister,
+      topGA,
+      topMinutes,
+      bestGk
+    }
+  };
+}
+
+app.get('/api/team/:id/stats', (req, res) => {
+  const stats = getTeamStats(req.params.id, req.query);
+  if (!stats) return fail(res, 'Команда не найдена', 404);
+  res.json(stats);
+});
+
+app.get('/api/club/stats', needClub, (req: any, res) => {
+  const stats = getTeamStats(req.tid, req.query);
+  if (!stats) return fail(res, 'Клуб не найден', 404);
+  res.json(stats);
+});
+
 /* — клуб — */
 app.get('/api/club', needClub, (req: any, res) => {
   const t = team(req.tid), sq = squadOf(req.tid);
